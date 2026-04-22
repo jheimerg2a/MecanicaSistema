@@ -1,0 +1,41 @@
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
+
+@Component({
+  selector: 'app-login',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
+  templateUrl: './login.html',
+  styleUrls: ['./login.css']
+})
+export class LoginComponent {
+  email    = '';
+  password = '';
+  error    = '';
+  cargando = false;
+
+  constructor(private auth: AuthService, private router: Router) {}
+
+  login() {
+    if (!this.email || !this.password) {
+      this.error = 'Por favor completa todos los campos';
+      return;
+    }
+    this.cargando = true;
+    this.error    = '';
+
+    this.auth.login(this.email, this.password).subscribe({
+      next: (res) => {
+        this.auth.guardarSesion(res.token, res.usuario);
+        this.router.navigate(['/dashboard/clientes']);
+      },
+      error: () => {
+        this.error    = 'Credenciales incorrectas';
+        this.cargando = false;
+      }
+    });
+  }
+}

@@ -1,0 +1,49 @@
+<div class="login-wrapper d-flex align-items-center justify-content-center vh-100">
+  <div class="card shadow-sm p-4" style="width: 100%; max-width: 420px;">
+
+    <!-- Logo / título -->
+    <div class="text-center mb-4">
+      <i class="bi bi-wrench-adjustable-circle-fill text-warning" style="font-size: 3rem;"></i>
+      <h4 class="mt-2 fw-bold">Taller Mecánico</h4>
+      <p class="text-muted small">Sistema de Gestión</p>
+    </div>
+
+    <!-- Alerta de error -->
+    <div *ngIf="error" class="alert alert-danger py-2 small">
+      <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+    </div>
+
+    <!-- Formulario -->
+    <div class="mb-3">
+      <label class="form-label small fw-semibold">Correo electrónico</label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+        <input type="email" class="form-control" placeholder="admin@taller.com"
+               [(ngModel)]="email" (keyup.enter)="login()">
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label small fw-semibold">Contraseña</label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+        <input type="password" class="form-control" placeholder="••••••••"
+               [(ngModel)]="password" (keyup.enter)="login()">
+      </div>
+    </div>
+
+    <button class="btn btn-warning w-100 fw-semibold" (click)="login()" [disabled]="cargando">
+      <span *ngIf="cargando" class="spinner-border spinner-border-sm me-2"></span>
+      <i *ngIf="!cargando" class="bi bi-box-arrow-in-right me-2"></i>
+      {{ cargando ? 'Ingresando...' : 'Ingresar' }}
+    </button>
+
+    <!-- Enlace consulta pública -->
+    <div class="text-center mt-3">
+      <a routerLink="/consulta" class="text-muted small">
+        <i class="bi bi-search me-1"></i>Consultar estado de mi vehículo
+      </a>
+    </div>
+
+  </div>
+</div>

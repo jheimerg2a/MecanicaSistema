@@ -1,0 +1,31 @@
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
+
+@Component({
+  selector: 'app-dashboard',
+  standalone: true,
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  templateUrl: './dashboard.html',
+  styleUrl: './dashboard.css'
+})
+export class DashboardComponent {
+  menuAbierto = true;
+  usuario: any;
+
+  menuItems = [
+    { path: 'clientes',  label: 'Clientes',   icono: 'bi-people-fill' },
+    { path: 'vehiculos', label: 'Vehículos',  icono: 'bi-car-front-fill' },
+    { path: 'ordenes',   label: 'Órdenes',    icono: 'bi-clipboard2-check-fill' },
+    { path: 'repuestos', label: 'Repuestos',  icono: 'bi-box-seam-fill' },
+  ];
+
+  constructor(private auth: AuthService, private router: Router) {
+    this.usuario = this.auth.getUsuario();
+  }
+
+  logout() {
+    this.auth.logout();
+  }
+}

@@ -1,0 +1,139 @@
+<div>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-0"><i class="bi bi-clipboard2-check-fill text-warning me-2"></i>Órdenes de trabajo</h4>
+      <small class="text-muted">{{ ordenes.length }} órdenes en total</small>
+    </div>
+    <button class="btn btn-warning fw-semibold" (click)="nueva()">
+      <i class="bi bi-plus-lg me-1"></i>Nueva orden
+    </button>
+  </div>
+
+  <div class="input-group mb-4" style="max-width:400px">
+    <span class="input-group-text"><i class="bi bi-search"></i></span>
+    <input class="form-control" placeholder="Buscar por código, cliente o placa..."
+           [(ngModel)]="busqueda" (input)="filtrar()">
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>Código</th>
+            <th>Cliente</th>
+            <th>Vehículo</th>
+            <th>Placa</th>
+            <th>Mecánico</th>
+            <th>Estado</th>
+            <th>Ingreso</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="cargando">
+            <td colspan="8" class="text-center py-4">
+              <div class="spinner-border text-warning"></div>
+            </td>
+          </tr>
+          <tr *ngFor="let o of filtradas">
+            <td><strong>{{ o.codigo }}</strong></td>
+            <td>{{ o.cliente }}</td>
+            <td>{{ o.vehiculo }}</td>
+            <td><span class="badge bg-light text-dark border">{{ o.placa }}</span></td>
+            <td>{{ o.mecanico || '—' }}</td>
+            <td><span [class]="getBadge(o.estado).clase">{{ getBadge(o.estado).label }}</span></td>
+            <td class="small text-muted">{{ o.fecha_ingreso | date:'dd/MM/yyyy' }}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary" (click)="abrirEstado(o)" title="Cambiar estado">
+                <i class="bi bi-arrow-repeat"></i>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="!cargando && filtradas.length === 0">
+            <td colspan="8" class="text-center text-muted py-4">No hay órdenes registradas</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal nueva orden -->
+<div class="modal-backdrop-custom" *ngIf="mostrarModal" (click)="mostrarModal=false"></div>
+<div class="modal-custom" *ngIf="mostrarModal">
+  <div class="modal-dialog-custom">
+    <div class="modal-header">
+      <h5 class="modal-title fw-bold"><i class="bi bi-clipboard2-plus me-2"></i>Nueva orden de trabajo</h5>
+      <button class="btn-close" (click)="mostrarModal=false"></button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label small fw-semibold">ID Vehículo *</label>
+          <input class="form-control" type="number" placeholder="Ej: 1"
+                 [(ngModel)]="ordenForm.vehiculo_id">
+          <small class="text-muted">Puedes ver los IDs en la sección Clientes</small>
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-semibold">ID Mecánico</label>
+          <input class="form-control" type="number" placeholder="Ej: 2"
+                 [(ngModel)]="ordenForm.mecanico_id">
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Kilometraje actual</label>
+          <input class="form-control" type="number" [(ngModel)]="ordenForm.km_actual">
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Fecha estimada entrega</label>
+          <input class="form-control" type="date" [(ngModel)]="ordenForm.fecha_estimada">
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-semibold">Descripción del problema *</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="ordenForm.descripcion_problema"
+                    placeholder="Describe el problema del vehículo..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="mostrarModal=false">Cancelar</button>
+      <button class="btn btn-warning fw-semibold" (click)="guardar()" [disabled]="guardando">
+        <span *ngIf="guardando" class="spinner-border spinner-border-sm me-1"></span>
+        {{ guardando ? 'Guardando...' : 'Crear orden' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal cambiar estado -->
+<div class="modal-backdrop-custom" *ngIf="mostrarModalEstado" (click)="mostrarModalEstado=false"></div>
+<div class="modal-custom" *ngIf="mostrarModalEstado">
+  <div class="modal-dialog-custom">
+    <div class="modal-header">
+      <h5 class="modal-title fw-bold">
+        <i class="bi bi-arrow-repeat me-2"></i>Actualizar estado — {{ ordenSeleccionada.codigo }}
+      </h5>
+      <button class="btn-close" (click)="mostrarModalEstado=false"></button>
+    </div>
+    <div class="modal-body">
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Nuevo estado</label>
+        <select class="form-select" [(ngModel)]="estadoForm.estado">
+          <option *ngFor="let e of estados" [value]="e">{{ getBadge(e).label }}</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Comentario para el cliente</label>
+        <textarea class="form-control" rows="3" [(ngModel)]="estadoForm.comentario"
+                  placeholder="Ej: Se cambió el filtro de aceite y se realizó alineación..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="mostrarModalEstado=false">Cancelar</button>
+      <button class="btn btn-primary fw-semibold" (click)="actualizarEstado()" [disabled]="guardando">
+        <span *ngIf="guardando" class="spinner-border spinner-border-sm me-1"></span>
+        {{ guardando ? 'Guardando...' : 'Actualizar estado' }}
+      </button>
+    </div>
+  </div>
+</div>

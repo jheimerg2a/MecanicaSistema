@@ -1,0 +1,43 @@
+<div class="dashboard-layout" [class.sidebar-cerrado]="!menuAbierto">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <i class="bi bi-wrench-adjustable-circle-fill text-warning me-2" style="font-size:1.4rem"></i>
+      <span class="sidebar-title">Taller</span>
+      <button class="btn-toggle ms-auto" (click)="menuAbierto = !menuAbierto">
+        <i class="bi" [class.bi-layout-sidebar-inset]="menuAbierto" [class.bi-layout-sidebar]="!menuAbierto"></i>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav mt-3">
+      <a *ngFor="let item of menuItems"
+         [routerLink]="item.path"
+         routerLinkActive="activo"
+         class="nav-item">
+        <i class="bi {{ item.icono }}"></i>
+        <span class="nav-label">{{ item.label }}</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="usuario-info">
+        <div class="avatar">{{ usuario?.nombre?.charAt(0) }}</div>
+        <div class="sidebar-title">
+          <div class="fw-semibold small">{{ usuario?.nombre }}</div>
+          <div class="text-muted" style="font-size:0.7rem">{{ usuario?.rol }}</div>
+        </div>
+      </div>
+      <button class="btn btn-outline-danger btn-sm w-100 mt-2" (click)="logout()">
+        <i class="bi bi-box-arrow-right me-1"></i>
+        <span class="nav-label">Cerrar sesión</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Contenido principal -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+
+</div>
