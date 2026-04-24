@@ -1,0 +1,270 @@
+<div>
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-0">
+        <i class="bi bi-receipt-cutoff text-warning me-2"></i>Facturación
+      </h4>
+      <small class="text-muted">{{ facturas.length }} facturas emitidas</small>
+    </div>
+    <button class="btn btn-warning fw-semibold" (click)="abrirModalFactura()">
+      <i class="bi bi-plus-lg me-1"></i>Nueva factura
+    </button>
+  </div>
+
+  <!-- Buscador -->
+  <div class="input-group mb-4" style="max-width:400px">
+    <span class="input-group-text"><i class="bi bi-search"></i></span>
+    <input class="form-control" placeholder="Buscar por número o estado..."
+           [(ngModel)]="busqueda" (input)="filtrar()">
+  </div>
+
+  <!-- Tabla -->
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>Número</th>
+            <th>Orden</th>
+            <th>Subtotal</th>
+            <th>IGV</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="cargando">
+            <td colspan="8" class="text-center py-4">
+              <div class="spinner-border text-warning"></div>
+            </td>
+          </tr>
+          <tr *ngFor="let f of filtradas">
+            <td><strong>{{ f.numero }}</strong></td>
+            <td class="text-muted small">Orden #{{ f.orden_id }}</td>
+            <td>S/ {{ f.subtotal | number:'1.2-2' }}</td>
+            <td>S/ {{ f.igv | number:'1.2-2' }}</td>
+            <td><strong>S/ {{ f.total | number:'1.2-2' }}</strong></td>
+            <td>
+              <span [class]="getPagoEstado(f.estado_pago).clase">
+                {{ getPagoEstado(f.estado_pago).label }}
+              </span>
+            </td>
+            <td class="small text-muted">{{ f.fecha_emision | date:'dd/MM/yyyy' }}</td>
+            <td>
+              <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-outline-secondary" (click)="verDetalle(f)"
+                        title="Ver detalle">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-success"
+                        *ngIf="f.estado_pago !== 'pagado'"
+                        (click)="abrirPago(f)" title="Registrar pago">
+                  <i class="bi bi-cash-coin"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="!cargando && filtradas.length === 0">
+            <td colspan="8" class="text-center text-muted py-4">
+              <i class="bi bi-receipt" style="font-size:2rem"></i>
+              <p class="mt-2 mb-0">No hay facturas emitidas</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal generar factura -->
+<div class="modal-backdrop-custom" *ngIf="mostrarModalFactura" (click)="mostrarModalFactura=false"></div>
+<div class="modal-custom" *ngIf="mostrarModalFactura">
+  <div class="modal-dialog-custom">
+    <div class="modal-header">
+      <h5 class="modal-title fw-bold">
+        <i class="bi bi-receipt me-2"></i>Generar factura
+      </h5>
+      <button class="btn-close" (click)="mostrarModalFactura=false"></button>
+    </div>
+    <div class="modal-body">
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Selecciona la orden *</label>
+        <select class="form-select" [(ngModel)]="facturaForm.orden_id">
+          <option [value]="null">— Selecciona una orden —</option>
+          <option *ngFor="let o of ordenesSinFactura" [value]="o.id">
+            {{ o.codigo }} — {{ o.cliente }} — {{ o.vehiculo }} ({{ o.placa }})
+          </option>
+        </select>
+        <small class="text-muted">Solo se muestran órdenes sin factura</small>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Notas</label>
+        <textarea class="form-control" rows="2" [(ngModel)]="facturaForm.notas"
+                  placeholder="Observaciones opcionales..."></textarea>
+      </div>
+      <div class="alert alert-info small mb-0">
+        <i class="bi bi-info-circle me-1"></i>
+        El total se calcula automáticamente sumando mano de obra, servicios y repuestos de la orden + IGV 18%.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="mostrarModalFactura=false">Cancelar</button>
+      <button class="btn btn-warning fw-semibold" (click)="generarFactura()" [disabled]="guardando">
+        <span *ngIf="guardando" class="spinner-border spinner-border-sm me-1"></span>
+        {{ guardando ? 'Generando...' : 'Generar factura' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal registrar pago -->
+<div class="modal-backdrop-custom" *ngIf="mostrarModalPago" (click)="mostrarModalPago=false"></div>
+<div class="modal-custom" *ngIf="mostrarModalPago">
+  <div class="modal-dialog-custom">
+    <div class="modal-header">
+      <h5 class="modal-title fw-bold">
+        <i class="bi bi-cash-coin me-2"></i>Registrar pago — {{ facturaSeleccionada?.numero }}
+      </h5>
+      <button class="btn-close" (click)="mostrarModalPago=false"></button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Resumen factura -->
+      <div class="bg-light rounded p-3 mb-3">
+        <div class="d-flex justify-content-between small">
+          <span class="text-muted">Total factura:</span>
+          <strong>S/ {{ facturaSeleccionada?.total | number:'1.2-2' }}</strong>
+        </div>
+        <div class="d-flex justify-content-between small mt-1">
+          <span class="text-muted">Estado:</span>
+          <span [class]="getPagoEstado(facturaSeleccionada?.estado_pago).clase">
+            {{ getPagoEstado(facturaSeleccionada?.estado_pago).label }}
+          </span>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Monto a pagar (S/) *</label>
+        <input class="form-control form-control-lg" type="number" step="0.01"
+               [(ngModel)]="pagoForm.monto" placeholder="0.00">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-semibold">Método de pago *</label>
+        <div class="d-flex flex-wrap gap-2">
+          <button *ngFor="let m of metodos"
+            class="btn btn-sm"
+            [class.btn-warning]="pagoForm.metodo === m"
+            [class.btn-outline-secondary]="pagoForm.metodo !== m"
+            (click)="pagoForm.metodo = m">
+            <i class="bi me-1"
+               [class.bi-cash]="m==='efectivo'"
+               [class.bi-credit-card]="m==='tarjeta'"
+               [class.bi-bank]="m==='transferencia'"
+               [class.bi-phone]="m==='yape' || m==='plin'"></i>
+            {{ m | titlecase }}
+          </button>
+        </div>
+      </div>
+
+      <div class="mb-3" *ngIf="pagoForm.metodo !== 'efectivo'">
+        <label class="form-label small fw-semibold">Referencia / N° operación</label>
+        <input class="form-control" [(ngModel)]="pagoForm.referencia"
+               placeholder="Número de operación o referencia">
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="mostrarModalPago=false">Cancelar</button>
+      <button class="btn btn-success fw-semibold" (click)="registrarPago()" [disabled]="guardando">
+        <span *ngIf="guardando" class="spinner-border spinner-border-sm me-1"></span>
+        {{ guardando ? 'Registrando...' : 'Confirmar pago' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal detalle factura -->
+<div class="modal-backdrop-custom" *ngIf="mostrarModalDetalle" (click)="mostrarModalDetalle=false"></div>
+<div class="modal-custom" *ngIf="mostrarModalDetalle && facturaSeleccionada">
+  <div class="modal-dialog-custom">
+    <div class="modal-header">
+      <h5 class="modal-title fw-bold">
+        <i class="bi bi-file-text me-2"></i>{{ facturaSeleccionada.numero }}
+      </h5>
+      <button class="btn-close" (click)="mostrarModalDetalle=false"></button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Totales -->
+      <div class="row g-2 mb-3">
+        <div class="col-4">
+          <div class="bg-light rounded p-2 text-center">
+            <div class="small text-muted">Subtotal</div>
+            <div class="fw-bold">S/ {{ facturaSeleccionada.subtotal | number:'1.2-2' }}</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="bg-light rounded p-2 text-center">
+            <div class="small text-muted">IGV (18%)</div>
+            <div class="fw-bold">S/ {{ facturaSeleccionada.igv | number:'1.2-2' }}</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="bg-warning-subtle rounded p-2 text-center">
+            <div class="small text-muted">Total</div>
+            <div class="fw-bold text-warning">S/ {{ facturaSeleccionada.total | number:'1.2-2' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado pago -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="small text-muted">Estado de pago:</span>
+        <span [class]="getPagoEstado(facturaSeleccionada.estado_pago).clase">
+          {{ getPagoEstado(facturaSeleccionada.estado_pago).label }}
+        </span>
+      </div>
+
+      <!-- Historial de pagos -->
+      <div *ngIf="facturaSeleccionada.pagos?.length > 0">
+        <h6 class="fw-semibold mb-2">
+          <i class="bi bi-clock-history me-1"></i>Historial de pagos
+        </h6>
+        <div *ngFor="let p of facturaSeleccionada.pagos"
+             class="d-flex justify-content-between align-items-center py-2 border-bottom small">
+          <div>
+            <i class="bi bi-check-circle-fill text-success me-1"></i>
+            <strong>S/ {{ p.monto | number:'1.2-2' }}</strong>
+            <span class="badge bg-light text-dark border ms-2">{{ p.metodo | titlecase }}</span>
+          </div>
+          <span class="text-muted">{{ p.fecha_pago | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+
+        <!-- Saldo pendiente -->
+        <div class="d-flex justify-content-between mt-2 fw-semibold"
+             *ngIf="facturaSeleccionada.estado_pago !== 'pagado'">
+          <span class="text-danger">Saldo pendiente:</span>
+          <span class="text-danger">S/ {{ getSaldoPendiente(facturaSeleccionada) | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <div *ngIf="!facturaSeleccionada.pagos?.length" class="text-center text-muted py-3">
+        <i class="bi bi-cash-stack" style="font-size:1.5rem"></i>
+        <p class="small mt-1 mb-0">Aún no hay pagos registrados</p>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="mostrarModalDetalle=false">Cerrar</button>
+      <button class="btn btn-success fw-semibold"
+              *ngIf="facturaSeleccionada.estado_pago !== 'pagado'"
+              (click)="mostrarModalDetalle=false; abrirPago(facturaSeleccionada)">
+        <i class="bi bi-cash-coin me-1"></i>Registrar pago
+      </button>
+    </div>
+  </div>
+</div>

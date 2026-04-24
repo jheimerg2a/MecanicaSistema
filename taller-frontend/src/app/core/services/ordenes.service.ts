@@ -8,6 +8,7 @@ export class OrdenesService {
 
   getAll()            { return this.http.get<any[]>(this.url); }
   getById(id: number) { return this.http.get<any>(`${this.url}/${id}`); }
+  getEstadisticas() { return this.http.get<any>(`${this.url}/estadisticas`); }
   create(data: any)   { return this.http.post<any>(this.url, data); }
   updateEstado(id: number, estado: string, comentario: string) {
     return this.http.patch(`${this.url}/${id}/estado`, { estado, comentario });

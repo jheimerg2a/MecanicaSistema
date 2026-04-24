@@ -1,0 +1,158 @@
+<div>
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-0">
+        <i class="bi bi-person-gear text-warning me-2"></i>Usuarios
+      </h4>
+      <small class="text-muted">{{ usuarios.length }} usuarios registrados</small>
+    </div>
+    <button class="btn btn-warning fw-semibold" (click)="nuevo()">
+      <i class="bi bi-plus-lg me-1"></i>Nuevo usuario
+    </button>
+  </div>
+
+  <!-- Buscador -->
+  <div class="input-group mb-4" style="max-width:400px">
+    <span class="input-group-text"><i class="bi bi-search"></i></span>
+    <input class="form-control" placeholder="Buscar por nombre, email o rol..."
+           [(ngModel)]="busqueda" (input)="filtrar()">
+  </div>
+
+  <!-- Tarjetas de usuarios -->
+  <div class="row g-3">
+    <div *ngIf="cargando" class="col-12 text-center py-5">
+      <div class="spinner-border text-warning"></div>
+    </div>
+
+    <div *ngFor="let u of filtrados" class="col-12 col-md-6 col-lg-4">
+      <div class="usuario-card" [class.inactivo]="!u.activo">
+
+        <!-- Avatar y nombre -->
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="avatar-lg" [class.avatar-admin]="u.rol === 'admin'">
+            {{ u.nombre.charAt(0).toUpperCase() }}
+          </div>
+          <div>
+            <div class="fw-bold">
+              {{ u.nombre }}
+              <span *ngIf="esMiCuenta(u)" class="badge bg-warning text-dark ms-1 small">Tú</span>
+            </div>
+            <div class="small text-muted">{{ u.email }}</div>
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="badge"
+            [class.bg-danger]="u.rol === 'admin'"
+            [class.bg-primary]="u.rol === 'mecanico'">
+            <i class="bi me-1"
+               [class.bi-shield-fill]="u.rol === 'admin'"
+               [class.bi-wrench]="u.rol === 'mecanico'"></i>
+            {{ u.rol === 'admin' ? 'Administrador' : 'Mecánico' }}
+          </span>
+          <span class="badge"
+            [class.bg-success]="u.activo"
+            [class.bg-secondary]="!u.activo">
+            {{ u.activo ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+
+        <div class="small text-muted mb-3" *ngIf="u.telefono">
+          <i class="bi bi-telephone me-1"></i>{{ u.telefono }}
+        </div>
+
+        <!-- Acciones -->
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-secondary flex-fill" (click)="editar(u)">
+            <i class="bi bi-pencil me-1"></i>Editar
+          </button>
+          <button class="btn btn-sm flex-fill"
+            [class.btn-outline-danger]="u.activo"
+            [class.btn-outline-success]="!u.activo"
+            [disabled]="esMiCuenta(u)"
+            (click)="toggleActivo(u)">
+            <i class="bi me-1"
+               [class.bi-person-slash]="u.activo"
+               [class.bi-person-check]="!u.activo"></i>
+            {{ u.activo ? 'Desactivar' : 'Activar' }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <div *ngIf="!cargando && filtrados.length === 0" class="col-12 text-center text-muted py-5">
+      <i class="bi bi-people" style="font-size:2.5rem"></i>
+      <p class="mt-2">No hay usuarios registrados</p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop-custom" *ngIf="mostrarModal" (click)="mostrarModal=false"></div>
+<div class="modal-custom" *ngIf="mostrarModal">
+  <div class="modal-dialog-custom">
+    <div class="modal-header">
+      <h5 class="modal-title fw-bold">
+        <i class="bi bi-person-plus me-2"></i>{{ modoEdicion ? 'Editar' : 'Nuevo' }} usuario
+      </h5>
+      <button class="btn-close" (click)="mostrarModal=false"></button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-3">
+
+        <div class="col-12">
+          <label class="form-label small fw-semibold">Nombre completo *</label>
+          <input class="form-control" [(ngModel)]="usuarioForm.nombre" placeholder="Ej: Juan Pérez">
+        </div>
+
+        <div class="col-12">
+          <label class="form-label small fw-semibold">Email *</label>
+          <input class="form-control" type="email" [(ngModel)]="usuarioForm.email"
+                 placeholder="Ej: juan@taller.com">
+        </div>
+
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Teléfono</label>
+          <input class="form-control" [(ngModel)]="usuarioForm.telefono" placeholder="Ej: 987654321">
+        </div>
+
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Rol *</label>
+          <select class="form-select" [(ngModel)]="usuarioForm.rol">
+            <option value="mecanico">Mecánico</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+
+        <!-- Password -->
+        <div class="col-12">
+          <label class="form-label small fw-semibold">
+            {{ modoEdicion ? 'Nueva contraseña (dejar vacío para no cambiar)' : 'Contraseña *' }}
+          </label>
+          <input class="form-control" type="password"
+                 [(ngModel)]="usuarioForm.password"
+                 placeholder="Mínimo 6 caracteres">
+        </div>
+
+        <!-- Info si es edición -->
+        <div class="col-12" *ngIf="modoEdicion">
+          <div class="alert alert-info small mb-0 py-2">
+            <i class="bi bi-info-circle me-1"></i>
+            Si no deseas cambiar la contraseña, deja ese campo vacío.
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="mostrarModal=false">Cancelar</button>
+      <button class="btn btn-warning fw-semibold" (click)="guardar()" [disabled]="guardando">
+        <span *ngIf="guardando" class="spinner-border spinner-border-sm me-1"></span>
+        {{ guardando ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </div>
+</div>

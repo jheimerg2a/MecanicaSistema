@@ -75,4 +75,36 @@ const updateEstado = async (req, res) => {
   }
 };
 
-module.exports = { getOrdenes, getOrdenById, createOrden, updateEstado };
+const getEstadisticas = async (req, res) => {
+  try {
+    const [[ordenes]]    = await pool.query(`SELECT COUNT(*) AS total,
+      SUM(estado = 'recibido')         AS recibido,
+      SUM(estado = 'en_reparacion')    AS en_reparacion,
+      SUM(estado = 'listo')            AS listo,
+      SUM(estado = 'entregado')        AS entregado
+      FROM ordenes_trabajo`);
+
+    const [[clientes]]   = await pool.query('SELECT COUNT(*) AS total FROM clientes');
+    const [[vehiculos]]  = await pool.query('SELECT COUNT(*) AS total FROM vehiculos');
+    const [[stockBajo]]  = await pool.query('SELECT COUNT(*) AS total FROM v_stock_bajo');
+    const [[ingresos]]   = await pool.query(`SELECT COALESCE(SUM(total),0) AS total
+      FROM facturas WHERE MONTH(fecha_emision) = MONTH(NOW())
+      AND YEAR(fecha_emision) = YEAR(NOW())`);
+    const [ultimasOrdenes] = await pool.query(
+      'SELECT * FROM v_ordenes_resumen ORDER BY fecha_ingreso DESC LIMIT 5'
+    );
+
+    res.json({
+      ordenes,
+      clientes:      clientes.total,
+      vehiculos:     vehiculos.total,
+      stockBajo:     stockBajo.total,
+      ingresosMes:   ingresos.total,
+      ultimasOrdenes
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ mensaje: 'Error al obtener estadísticas' });
+  }
+};
+module.exports = { getOrdenes, getOrdenById, createOrden, updateEstado, getEstadisticas };

@@ -30,7 +30,7 @@ export class LoginComponent {
     this.auth.login(this.email, this.password).subscribe({
       next: (res) => {
         this.auth.guardarSesion(res.token, res.usuario);
-        this.router.navigate(['/dashboard/clientes']);
+        this.router.navigate(['/dashboard/home']);
       },
       error: () => {
         this.error    = 'Credenciales incorrectas';

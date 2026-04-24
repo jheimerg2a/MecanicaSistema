@@ -16,10 +16,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.DashboardComponent),
     children: [
+      { path: '',          redirectTo: 'home', pathMatch: 'full' },
+      { path: 'home',      loadComponent: () => import('./pages/dashboard/home/home').then(m => m.HomeComponent) },
       { path: 'clientes',  loadComponent: () => import('./pages/clientes/clientes').then(m => m.ClientesComponent) },
       { path: 'vehiculos', loadComponent: () => import('./pages/vehiculos/vehiculos').then(m => m.VehiculosComponent) },
       { path: 'ordenes',   loadComponent: () => import('./pages/ordenes/ordenes').then(m => m.OrdenesComponent) },
+      { path: 'usuarios', loadComponent: () => import('./pages/usuarios/usuarios').then(m => m.UsuariosComponent) },
       { path: 'repuestos', loadComponent: () => import('./pages/repuestos/repuestos').then(m => m.RepuestosComponent) },
+      { path: 'facturas', loadComponent: () => import('./pages/facturas/facturas').then(m => m.FacturasComponent) },
     ]
   },
   { path: '**', redirectTo: 'consulta' }

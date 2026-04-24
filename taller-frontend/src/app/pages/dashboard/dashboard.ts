@@ -15,10 +15,13 @@ export class DashboardComponent {
   usuario: any;
 
   menuItems = [
-    { path: 'clientes',  label: 'Clientes',   icono: 'bi-people-fill' },
-    { path: 'vehiculos', label: 'Vehículos',  icono: 'bi-car-front-fill' },
-    { path: 'ordenes',   label: 'Órdenes',    icono: 'bi-clipboard2-check-fill' },
-    { path: 'repuestos', label: 'Repuestos',  icono: 'bi-box-seam-fill' },
+    { path: 'home',      label: 'Inicio',      icono: 'bi-speedometer2' },
+    { path: 'clientes',  label: 'Clientes',    icono: 'bi-people-fill' },
+    { path: 'vehiculos', label: 'Vehículos',   icono: 'bi-car-front-fill' },
+    { path: 'ordenes',   label: 'Órdenes',     icono: 'bi-clipboard2-check-fill' },
+    { path: 'repuestos', label: 'Repuestos',   icono: 'bi-box-seam-fill' },
+    { path: 'facturas',  label: 'Facturación', icono: 'bi-receipt-cutoff' },
+    { path: 'usuarios',  label: 'Usuarios',    icono: 'bi-person-gear' },
   ];
 
   constructor(private auth: AuthService, private router: Router) {
