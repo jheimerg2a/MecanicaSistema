@@ -1,0 +1,289 @@
+<div>
+  <!-- Tabs -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">
+      <i class="bi bi-cart-fill text-warning me-2"></i>Punto de Venta
+    </h4>
+    <div class="btn-group">
+      <button class="btn btn-sm"
+        [class.btn-warning]="vista==='carrito'"
+        [class.btn-outline-secondary]="vista!=='carrito'"
+        (click)="cambiarVista('carrito')">
+        <i class="bi bi-cart me-1"></i>Carrito
+      </button>
+      <button class="btn btn-sm"
+        [class.btn-warning]="vista==='historial'"
+        [class.btn-outline-secondary]="vista!=='historial'"
+        (click)="cambiarVista('historial')">
+        <i class="bi bi-clock-history me-1"></i>Historial
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ CARRITO ═══════════════ -->
+  <div *ngIf="vista === 'carrito'">
+
+    <!-- Venta exitosa -->
+    <div *ngIf="ventaExitosa" class="card border-0 shadow-sm mb-4 border-success">
+      <div class="card-body text-center py-4">
+        <i class="bi bi-check-circle-fill text-success" style="font-size:3rem"></i>
+        <h5 class="mt-2 fw-bold text-success">¡Venta registrada!</h5>
+        <p class="text-muted mb-1">Boleta: <strong>{{ ventaExitosa.numero }}</strong></p>
+        <p class="text-muted mb-3">Total: <strong class="text-success">S/ {{ ventaExitosa.total | number:'1.2-2' }}</strong></p>
+        <div class="d-flex justify-content-center gap-2">
+          <button class="btn btn-success fw-semibold" (click)="imprimirBoleta()">
+            <i class="bi bi-printer me-1"></i>Imprimir boleta
+          </button>
+          <button class="btn btn-warning fw-semibold" (click)="limpiarCarrito()">
+            <i class="bi bi-plus-lg me-1"></i>Nueva venta
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!ventaExitosa">
+      <div class="row g-3">
+
+        <!-- Columna izquierda: buscador + carrito -->
+        <div class="col-lg-7">
+
+          <!-- Buscar por código de barras -->
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <label class="form-label small fw-semibold">
+                <i class="bi bi-upc-scan me-1 text-warning"></i>
+                Escanear código de barras o ingresar código
+              </label>
+              <div class="input-group">
+                <input #inputCodigo type="text" class="form-control form-control-lg"
+                       placeholder="Escanea o escribe el código y presiona Enter..."
+                       [(ngModel)]="codigoBuscar"
+                       (keydown)="onCodigoKeydown($event)"
+                       autofocus>
+                <button class="btn btn-warning px-3" (click)="buscarPorCodigo()" [disabled]="buscando">
+                  <i class="bi bi-search"></i>
+                </button>
+              </div>
+              <div *ngIf="productoError" class="text-danger small mt-1">
+                <i class="bi bi-exclamation-circle me-1"></i>{{ productoError }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Buscar por nombre -->
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <label class="form-label small fw-semibold">
+                <i class="bi bi-search me-1 text-warning"></i>Buscar producto por nombre
+              </label>
+              <div class="position-relative">
+                <input type="text" class="form-control"
+                       placeholder="Escribe el nombre del producto..."
+                       [(ngModel)]="busquedaNombre"
+                       (input)="buscarPorNombre()">
+                <div *ngIf="mostrarSugerencias"
+                     class="sugerencias-dropdown">
+                  <div *ngFor="let p of resultadosBusqueda"
+                       class="sugerencia-item"
+                       (click)="seleccionarProducto(p)">
+                    <div class="fw-semibold small">{{ p.nombre }}</div>
+                    <div class="d-flex justify-content-between">
+                      <span class="text-muted" style="font-size:0.75rem">{{ p.codigo }}</span>
+                      <span class="text-success fw-bold small">S/ {{ p.precio_venta | number:'1.2-2' }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Items del carrito -->
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3 pb-0">
+              <h6 class="fw-bold mb-0">
+                <i class="bi bi-cart me-1 text-warning"></i>
+                Carrito ({{ carrito.length }} productos)
+              </h6>
+            </div>
+            <div class="card-body p-0">
+              <div *ngIf="carrito.length === 0" class="text-center text-muted py-5">
+                <i class="bi bi-cart" style="font-size:2.5rem"></i>
+                <p class="mt-2 small">Escanea o busca un producto para agregarlo</p>
+              </div>
+              <div *ngFor="let item of carrito; let i = index" class="carrito-item">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="flex-grow-1 me-2">
+                    <div class="fw-semibold small">{{ item.nombre }}</div>
+                    <div class="text-muted" style="font-size:0.75rem">
+                      {{ item.codigo_barra }} · S/ {{ item.precio_unitario | number:'1.2-2' }} c/u
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="cantidad-control">
+                      <button (click)="cambiarCantidad(item, -1)">−</button>
+                      <span>{{ item.cantidad }}</span>
+                      <button (click)="cambiarCantidad(item, 1)">+</button>
+                    </div>
+                    <div class="text-success fw-bold small" style="min-width:70px; text-align:right">
+                      S/ {{ item.precio_unitario * item.cantidad | number:'1.2-2' }}
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger" (click)="quitarItem(i)">
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Columna derecha: cliente + totales -->
+        <div class="col-lg-5">
+          <div class="card border-0 shadow-sm sticky-top" style="top:1rem">
+            <div class="card-body">
+
+              <h6 class="fw-bold mb-3"><i class="bi bi-person me-1 text-warning"></i>Datos del cliente</h6>
+              <div class="mb-2">
+                <input class="form-control form-control-sm" placeholder="Nombre del cliente (opcional)"
+                       [(ngModel)]="clienteNombre">
+              </div>
+              <div class="mb-3">
+                <input class="form-control form-control-sm" placeholder="DNI (opcional)"
+                       [(ngModel)]="clienteDni">
+              </div>
+
+              <h6 class="fw-bold mb-2"><i class="bi bi-cash me-1 text-warning"></i>Método de pago</h6>
+              <div class="d-flex flex-wrap gap-1 mb-3">
+                <button *ngFor="let m of metodos" class="btn btn-sm"
+                  [class.btn-warning]="metodoPago===m"
+                  [class.btn-outline-secondary]="metodoPago!==m"
+                  (click)="metodoPago=m">
+                  {{ m | titlecase }}
+                </button>
+              </div>
+
+              <hr>
+
+              <!-- Totales -->
+              <div class="d-flex justify-content-between mb-1 small">
+                <span class="text-muted">Subtotal:</span>
+                <span>S/ {{ subtotal | number:'1.2-2' }}</span>
+              </div>
+              <div class="d-flex justify-content-between mb-2 small">
+                <span class="text-muted">IGV (18%):</span>
+                <span>S/ {{ igv | number:'1.2-2' }}</span>
+              </div>
+              <div class="d-flex justify-content-between mb-3">
+                <strong>TOTAL:</strong>
+                <strong class="text-success" style="font-size:1.3rem">
+                  S/ {{ total | number:'1.2-2' }}
+                </strong>
+              </div>
+
+              <button class="btn btn-warning w-100 fw-bold py-2"
+                      (click)="procesarVenta()"
+                      [disabled]="carrito.length === 0 || procesando">
+                <span *ngIf="procesando" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!procesando" class="bi bi-check-lg me-2"></i>
+                {{ procesando ? 'Procesando...' : 'Confirmar venta' }}
+              </button>
+
+              <button *ngIf="carrito.length > 0" class="btn btn-outline-danger w-100 mt-2 btn-sm"
+                      (click)="limpiarCarrito()">
+                <i class="bi bi-trash me-1"></i>Limpiar carrito
+              </button>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ HISTORIAL ═══════════════ -->
+  <div *ngIf="vista === 'historial'">
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>Boleta</th>
+              <th>Cliente</th>
+              <th>Método</th>
+              <th>Total</th>
+              <th>Vendedor</th>
+              <th>Fecha</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="cargandoHistorial">
+              <td colspan="7" class="text-center py-4">
+                <div class="spinner-border text-warning"></div>
+              </td>
+            </tr>
+            <tr *ngFor="let v of ventas">
+              <td><strong>{{ v.numero }}</strong></td>
+              <td>{{ v.cliente_nombre }}</td>
+              <td><span class="badge bg-light text-dark border">{{ v.metodo_pago | titlecase }}</span></td>
+              <td class="text-success fw-bold">S/ {{ v.total | number:'1.2-2' }}</td>
+              <td>{{ v.vendedor }}</td>
+              <td class="small text-muted">{{ v.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-secondary" (click)="verDetalle(v)">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!cargandoHistorial && ventas.length === 0">
+              <td colspan="7" class="text-center text-muted py-4">No hay ventas registradas</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal detalle venta -->
+<div class="modal-backdrop-custom" *ngIf="mostrarDetalle" (click)="mostrarDetalle=false"></div>
+<div class="modal-custom" *ngIf="mostrarDetalle && ventaDetalle">
+  <div class="modal-dialog-custom">
+    <div class="modal-header">
+      <h5 class="modal-title fw-bold">
+        <i class="bi bi-receipt me-2"></i>{{ ventaDetalle.numero }}
+      </h5>
+      <button class="btn-close" (click)="mostrarDetalle=false"></button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-2 mb-3 small text-muted">
+        <div class="col-6">Cliente: <strong class="text-dark">{{ ventaDetalle.cliente_nombre }}</strong></div>
+        <div class="col-6" *ngIf="ventaDetalle.cliente_dni">DNI: <strong class="text-dark">{{ ventaDetalle.cliente_dni }}</strong></div>
+        <div class="col-6">Pago: <strong class="text-dark">{{ ventaDetalle.metodo_pago | titlecase }}</strong></div>
+        <div class="col-6">Fecha: <strong class="text-dark">{{ ventaDetalle.created_at | date:'dd/MM/yyyy HH:mm' }}</strong></div>
+      </div>
+      <table class="table table-sm">
+        <thead class="table-light">
+          <tr><th>Producto</th><th>Cant</th><th>P.Unit</th><th>Total</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of ventaDetalle.detalle">
+            <td class="small">{{ d.producto }}</td>
+            <td>{{ d.cantidad }}</td>
+            <td>S/ {{ d.precio_unitario | number:'1.2-2' }}</td>
+            <td>S/ {{ d.subtotal | number:'1.2-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="d-flex justify-content-between small"><span>Subtotal:</span><span>S/ {{ ventaDetalle.subtotal | number:'1.2-2' }}</span></div>
+      <div class="d-flex justify-content-between small"><span>IGV:</span><span>S/ {{ ventaDetalle.igv | number:'1.2-2' }}</span></div>
+      <div class="d-flex justify-content-between fw-bold"><span>Total:</span><span class="text-success">S/ {{ ventaDetalle.total | number:'1.2-2' }}</span></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="mostrarDetalle=false">Cerrar</button>
+    </div>
+  </div>
+</div>

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -20,23 +20,27 @@ export class ConsultaPublicaComponent {
   error     = '';
 
   estadoConfig: any = {
-    recibido:         { label: 'Recibido',          clase: 'bg-secondary', icono: 'bi-inbox' },
-    diagnostico:      { label: 'En diagnóstico',    clase: 'bg-info',      icono: 'bi-search' },
-    en_reparacion:    { label: 'En reparación',     clase: 'bg-primary',   icono: 'bi-tools' },
-    espera_repuestos: { label: 'Espera repuestos',  clase: 'bg-warning text-dark', icono: 'bi-hourglass-split' },
-    listo:            { label: '¡Listo para retirar!', clase: 'bg-success', icono: 'bi-check-circle' },
-    entregado:        { label: 'Entregado',         clase: 'bg-dark',      icono: 'bi-check2-all' },
-    cancelado:        { label: 'Cancelado',         clase: 'bg-danger',    icono: 'bi-x-circle' },
+    recibido:         { label: 'Recibido',              clase: 'bg-secondary', icono: 'bi-inbox' },
+    diagnostico:      { label: 'En diagnóstico',        clase: 'bg-info',      icono: 'bi-search' },
+    en_reparacion:    { label: 'En reparación',         clase: 'bg-primary',   icono: 'bi-tools' },
+    espera_repuestos: { label: 'Espera repuestos',      clase: 'bg-warning text-dark', icono: 'bi-hourglass-split' },
+    listo:            { label: '¡Listo para retirar!',  clase: 'bg-success',   icono: 'bi-check-circle' },
+    entregado:        { label: 'Entregado',             clase: 'bg-dark',      icono: 'bi-check2-all' },
+    cancelado:        { label: 'Cancelado',             clase: 'bg-danger',    icono: 'bi-x-circle' },
   };
 
-  constructor(private seguimiento: SeguimientoService) {}
+  constructor(
+    private seguimiento: SeguimientoService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   consultar() {
     if (!this.busqueda.trim()) return;
-    this.buscando = true;
-    this.buscado  = false;
-    this.error    = '';
+    this.buscando   = true;
+    this.buscado    = false;
+    this.error      = '';
     this.resultados = [];
+    this.cdr.detectChanges();
 
     const obs = this.tipoBusqueda === 'dni'
       ? this.seguimiento.consultarPorDni(this.busqueda.trim())
@@ -47,11 +51,13 @@ export class ConsultaPublicaComponent {
         this.resultados = data;
         this.buscando   = false;
         this.buscado    = true;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.error    = 'No se encontraron órdenes para esa búsqueda.';
         this.buscando = false;
         this.buscado  = true;
+        this.cdr.detectChanges();
       }
     });
   }

@@ -18,6 +18,7 @@ app.use('/api/ordenes',   require('./routes/ordenes.routes'));
 app.use('/api/repuestos', require('./routes/repuestos.routes'));
 app.use('/api/facturas',  require('./routes/facturas.routes'));
 app.use('/api/seguimiento', require('./routes/seguimiento.routes'));
+app.use('/api/ventas', require('./routes/ventas.routes'));
 
 // Ruta de prueba
 app.get('/', (req, res) => {

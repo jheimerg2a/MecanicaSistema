@@ -22,6 +22,7 @@ export class DashboardComponent {
     { path: 'repuestos', label: 'Repuestos',   icono: 'bi-box-seam-fill' },
     { path: 'facturas',  label: 'Facturación', icono: 'bi-receipt-cutoff' },
     { path: 'usuarios',  label: 'Usuarios',    icono: 'bi-person-gear' },
+    { path: 'ventas', label: 'Ventas', icono: 'bi-cart-fill' },
   ];
 
   constructor(private auth: AuthService, private router: Router) {

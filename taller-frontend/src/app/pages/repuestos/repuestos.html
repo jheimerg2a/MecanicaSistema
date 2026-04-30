@@ -1,50 +1,102 @@
 <div>
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div>
-      <h4 class="fw-bold mb-0"><i class="bi bi-box-seam-fill text-warning me-2"></i>Repuestos</h4>
+      <h4 class="fw-bold mb-0">
+        <i class="bi bi-box-seam-fill text-warning me-2"></i>Repuestos
+      </h4>
       <small class="text-muted">{{ repuestos.length }} productos en inventario</small>
     </div>
-    <button class="btn btn-warning fw-semibold" (click)="nuevo()">
-      <i class="bi bi-plus-lg me-1"></i>Nuevo repuesto
+    <div class="d-flex gap-2 flex-wrap">
+      <!-- Botón importar Excel -->
+      <button class="btn btn-success fw-semibold" (click)="abrirSelectorArchivo()" [disabled]="importando">
+        <span *ngIf="importando" class="spinner-border spinner-border-sm me-1"></span>
+        <i *ngIf="!importando" class="bi bi-file-earmark-excel me-1"></i>
+        {{ importando ? 'Importando...' : 'Importar Excel' }}
+      </button>
+      <input type="file" id="inputExcel" accept=".xlsx,.xls" style="display:none"
+             (change)="onArchivoSeleccionado($event)">
+      <button class="btn btn-warning fw-semibold" (click)="nuevo()">
+        <i class="bi bi-plus-lg me-1"></i>Nuevo
+      </button>
+    </div>
+  </div>
+
+  <!-- Resultado importación -->
+  <div *ngIf="resultadoImport" class="alert alert-success alert-dismissible mb-3">
+    <button type="button" class="btn-close" (click)="resultadoImport=null"></button>
+    <strong><i class="bi bi-check-circle me-1"></i>Importación completada</strong>
+    <div class="mt-1 small">
+      <span class="me-3">✅ Insertados: <strong>{{ resultadoImport.insertados }}</strong></span>
+      <span class="me-3">🔄 Actualizados: <strong>{{ resultadoImport.actualizados }}</strong></span>
+      <span *ngIf="resultadoImport.errores > 0" class="text-danger">
+        ⚠️ Errores: <strong>{{ resultadoImport.errores }}</strong>
+      </span>
+    </div>
+  </div>
+
+  <!-- Buscador -->
+  <div class="d-flex gap-2 mb-3 align-items-center flex-wrap">
+    <div class="input-group" style="max-width:420px">
+      <span class="input-group-text"><i class="bi bi-search"></i></span>
+      <input class="form-control" placeholder="Buscar por nombre, código, marca, código de barras..."
+             [(ngModel)]="busqueda" (input)="filtrar()">
+    </div>
+    <button class="btn btn-outline-secondary btn-sm" (click)="verMas=!verMas">
+      <i class="bi bi-table me-1"></i>{{ verMas ? 'Ver menos' : 'Ver más columnas' }}
     </button>
   </div>
 
-  <div class="input-group mb-4" style="max-width:400px">
-    <span class="input-group-text"><i class="bi bi-search"></i></span>
-    <input class="form-control" placeholder="Buscar por nombre, código o categoría..."
-           [(ngModel)]="busqueda" (input)="filtrar()">
-  </div>
-
+  <!-- Tabla -->
   <div class="card border-0 shadow-sm">
     <div class="table-responsive">
-      <table class="table table-hover mb-0">
+      <table class="table table-hover table-sm mb-0">
         <thead class="table-dark">
           <tr>
             <th>Código</th>
             <th>Nombre</th>
             <th>Categoría</th>
+            <th>Marca</th>
             <th>Stock</th>
-            <th>Mín.</th>
-            <th>P. Compra</th>
             <th>P. Venta</th>
+            <th>P. Compra</th>
+            <th *ngIf="verMas">Cód. Barra</th>
+            <th *ngIf="verMas">Cód. Original</th>
+            <th *ngIf="verMas">P. Mayor</th>
+            <th *ngIf="verMas">Cant. Mayor</th>
+            <th *ngIf="verMas">Moneda</th>
+            <th *ngIf="verMas">Dist. 1</th>
+            <th *ngIf="verMas">Dist. 2</th>
+            <th *ngIf="verMas">Dist. 3</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="cargando">
-            <td colspan="8" class="text-center py-4"><div class="spinner-border text-warning"></div></td>
+            <td [colSpan]="verMas ? 16 : 8" class="text-center py-4">
+              <div class="spinner-border text-warning"></div>
+            </td>
           </tr>
           <tr *ngFor="let r of filtrados" [class.table-danger]="stockBajo(r)">
             <td class="small text-muted">{{ r.codigo || '—' }}</td>
-            <td class="fw-semibold">
-              {{ r.nombre }}
-              <span *ngIf="stockBajo(r)" class="badge bg-danger ms-1 small">Stock bajo</span>
+            <td>
+              <div class="fw-semibold" style="max-width:280px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis"
+                   [title]="r.nombre">{{ r.nombre }}</div>
+              <span *ngIf="stockBajo(r)" class="badge bg-danger small">Stock bajo</span>
             </td>
-            <td>{{ r.categoria || '—' }}</td>
+            <td class="small">{{ r.categoria || '—' }}</td>
+            <td class="small">{{ r.marca || '—' }}</td>
             <td><strong>{{ r.stock }}</strong></td>
-            <td class="text-muted">{{ r.stock_minimo }}</td>
-            <td>S/ {{ r.precio_compra | number:'1.2-2' }}</td>
-            <td>S/ {{ r.precio_venta | number:'1.2-2' }}</td>
+            <td class="text-success fw-semibold">S/ {{ r.precio_venta | number:'1.2-2' }}</td>
+            <td class="text-muted small">S/ {{ r.precio_compra | number:'1.2-2' }}</td>
+            <td *ngIf="verMas" class="small">{{ r.codigo_barra || '—' }}</td>
+            <td *ngIf="verMas" class="small">{{ r.codigo_original || '—' }}</td>
+            <td *ngIf="verMas" class="small">S/ {{ r.precio_mayor | number:'1.2-2' }}</td>
+            <td *ngIf="verMas" class="small">{{ r.cantidad_mayor || '—' }}</td>
+            <td *ngIf="verMas" class="small">{{ r.moneda || '—' }}</td>
+            <td *ngIf="verMas" class="small">S/ {{ r.precio_dist1 | number:'1.2-2' }}</td>
+            <td *ngIf="verMas" class="small">S/ {{ r.precio_dist2 | number:'1.2-2' }}</td>
+            <td *ngIf="verMas" class="small">S/ {{ r.precio_dist3 | number:'1.2-2' }}</td>
             <td>
               <button class="btn btn-sm btn-outline-secondary" (click)="editar(r)">
                 <i class="bi bi-pencil"></i>
@@ -52,7 +104,10 @@
             </td>
           </tr>
           <tr *ngIf="!cargando && filtrados.length === 0">
-            <td colspan="8" class="text-center text-muted py-4">No hay repuestos registrados</td>
+            <td [colSpan]="verMas ? 16 : 8" class="text-center text-muted py-4">
+              <i class="bi bi-box-seam" style="font-size:2rem"></i>
+              <p class="mt-2 mb-0">No hay repuestos registrados</p>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -60,7 +115,7 @@
   </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal nuevo/editar -->
 <div class="modal-backdrop-custom" *ngIf="mostrarModal" (click)="mostrarModal=false"></div>
 <div class="modal-custom" *ngIf="mostrarModal">
   <div class="modal-dialog-custom">
@@ -72,8 +127,9 @@
     </div>
     <div class="modal-body">
       <div class="row g-3">
+
         <div class="col-6">
-          <label class="form-label small fw-semibold">Código</label>
+          <label class="form-label small fw-semibold">Código / Ubicación</label>
           <input class="form-control" [(ngModel)]="repuestoForm.codigo">
         </div>
         <div class="col-6">
@@ -85,25 +141,77 @@
           <input class="form-control" [(ngModel)]="repuestoForm.nombre">
         </div>
         <div class="col-6">
-          <label class="form-label small fw-semibold">Stock actual</label>
-          <input class="form-control" type="number" [(ngModel)]="repuestoForm.stock">
+          <label class="form-label small fw-semibold">Marca</label>
+          <input class="form-control" [(ngModel)]="repuestoForm.marca">
         </div>
         <div class="col-6">
+          <label class="form-label small fw-semibold">Unidad de medida</label>
+          <input class="form-control" [(ngModel)]="repuestoForm.unidad_medida" placeholder="Ej: UND, PAR, KIT">
+        </div>
+        <div class="col-4">
+          <label class="form-label small fw-semibold">Stock</label>
+          <input class="form-control" type="number" [(ngModel)]="repuestoForm.stock">
+        </div>
+        <div class="col-4">
           <label class="form-label small fw-semibold">Stock mínimo</label>
           <input class="form-control" type="number" [(ngModel)]="repuestoForm.stock_minimo">
         </div>
+        <div class="col-4">
+          <label class="form-label small fw-semibold">Moneda</label>
+          <select class="form-select" [(ngModel)]="repuestoForm.moneda">
+            <option value="PEN">PEN (S/)</option>
+            <option value="USD">USD ($)</option>
+          </select>
+        </div>
         <div class="col-6">
-          <label class="form-label small fw-semibold">Precio compra (S/)</label>
+          <label class="form-label small fw-semibold">Precio compra</label>
           <input class="form-control" type="number" step="0.01" [(ngModel)]="repuestoForm.precio_compra">
         </div>
         <div class="col-6">
-          <label class="form-label small fw-semibold">Precio venta (S/)</label>
+          <label class="form-label small fw-semibold">Precio venta</label>
           <input class="form-control" type="number" step="0.01" [(ngModel)]="repuestoForm.precio_venta">
         </div>
-        <div class="col-12">
-          <label class="form-label small fw-semibold">Proveedor</label>
-          <input class="form-control" [(ngModel)]="repuestoForm.proveedor">
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Precio por mayor</label>
+          <input class="form-control" type="number" step="0.01" [(ngModel)]="repuestoForm.precio_mayor">
         </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Cantidad por mayor</label>
+          <input class="form-control" type="number" [(ngModel)]="repuestoForm.cantidad_mayor">
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-semibold">Código de barras</label>
+          <input class="form-control" [(ngModel)]="repuestoForm.codigo_barra">
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Código OEM</label>
+          <input class="form-control" [(ngModel)]="repuestoForm.codigo_oem">
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Código original</label>
+          <input class="form-control" [(ngModel)]="repuestoForm.codigo_original">
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Marca OEM</label>
+          <input class="form-control" [(ngModel)]="repuestoForm.marca_oem">
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Proveedor OEM</label>
+          <input class="form-control" [(ngModel)]="repuestoForm.proveedor_oem">
+        </div>
+        <div class="col-4">
+          <label class="form-label small fw-semibold">Precio dist. 1</label>
+          <input class="form-control" type="number" step="0.01" [(ngModel)]="repuestoForm.precio_dist1">
+        </div>
+        <div class="col-4">
+          <label class="form-label small fw-semibold">Precio dist. 2</label>
+          <input class="form-control" type="number" step="0.01" [(ngModel)]="repuestoForm.precio_dist2">
+        </div>
+        <div class="col-4">
+          <label class="form-label small fw-semibold">Precio dist. 3</label>
+          <input class="form-control" type="number" step="0.01" [(ngModel)]="repuestoForm.precio_dist3">
+        </div>
+
       </div>
     </div>
     <div class="modal-footer">

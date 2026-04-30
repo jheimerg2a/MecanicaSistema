@@ -24,6 +24,7 @@ export const routes: Routes = [
       { path: 'usuarios', loadComponent: () => import('./pages/usuarios/usuarios').then(m => m.UsuariosComponent) },
       { path: 'repuestos', loadComponent: () => import('./pages/repuestos/repuestos').then(m => m.RepuestosComponent) },
       { path: 'facturas', loadComponent: () => import('./pages/facturas/facturas').then(m => m.FacturasComponent) },
+      { path: 'ventas', loadComponent: () => import('./pages/ventas/ventas').then(m => m.VentasComponent) },
     ]
   },
   { path: '**', redirectTo: 'consulta' }
