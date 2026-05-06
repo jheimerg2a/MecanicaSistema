@@ -19,10 +19,11 @@ export class DashboardComponent {
     { path: 'clientes',  label: 'Clientes',    icono: 'bi-people-fill' },
     { path: 'vehiculos', label: 'Vehículos',   icono: 'bi-car-front-fill' },
     { path: 'ordenes',   label: 'Órdenes',     icono: 'bi-clipboard2-check-fill' },
+    { path: 'servicios', label: 'Servicios',   icono: 'bi-tools' },
     { path: 'repuestos', label: 'Repuestos',   icono: 'bi-box-seam-fill' },
+    { path: 'ventas',    label: 'Ventas',      icono: 'bi-cart-fill' },
     { path: 'facturas',  label: 'Facturación', icono: 'bi-receipt-cutoff' },
     { path: 'usuarios',  label: 'Usuarios',    icono: 'bi-person-gear' },
-    { path: 'ventas', label: 'Ventas', icono: 'bi-cart-fill' },
   ];
 
   constructor(private auth: AuthService, private router: Router) {

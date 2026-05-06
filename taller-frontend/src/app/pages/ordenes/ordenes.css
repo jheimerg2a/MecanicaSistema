@@ -1,3 +1,67 @@
+/* Filtros de estado */
+.filtros-estado {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.filtro-btn {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.filtro-btn:hover { border-color: #f0a500; }
+.filtro-btn.activo { background: #f0a500; border-color: #f0a500; font-weight: 600; }
+.filtro-count {
+  background: rgba(0,0,0,0.1);
+  border-radius: 10px;
+  padding: 0 6px;
+  font-size: 0.75rem;
+}
+
+/* Sugerencias */
+.sugerencias-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0; right: 0;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 1000;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.sugerencia-item {
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.1s;
+}
+.sugerencia-item:hover { background: #fff8e1; }
+.sugerencia-item:last-child { border-bottom: none; }
+
+/* Secciones del detalle */
+.detalle-seccion {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+/* Seguimiento */
+.seguimiento-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+.seguimiento-item:last-child { border-bottom: none; }
+
+/* Modales */
 .modal-backdrop-custom {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.5);
@@ -10,12 +74,24 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  overflow-y: auto;
 }
 .modal-dialog-custom {
   background: #fff;
   border-radius: 16px;
   width: 100%;
   max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.modal-dialog-xl {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 92vh;
+  overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0,0,0,0.2);
 }
 .modal-header {
@@ -24,6 +100,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
 }
 .modal-body  { padding: 1.5rem; }
 .modal-footer {
@@ -32,4 +112,7 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  position: sticky;
+  bottom: 0;
+  background: #fff;
 }

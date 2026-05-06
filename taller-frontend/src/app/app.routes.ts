@@ -23,6 +23,7 @@ export const routes: Routes = [
       { path: 'ordenes',   loadComponent: () => import('./pages/ordenes/ordenes').then(m => m.OrdenesComponent) },
       { path: 'usuarios', loadComponent: () => import('./pages/usuarios/usuarios').then(m => m.UsuariosComponent) },
       { path: 'repuestos', loadComponent: () => import('./pages/repuestos/repuestos').then(m => m.RepuestosComponent) },
+      { path: 'servicios', loadComponent: () => import('./pages/servicios/servicios').then(m => m.ServiciosComponent) },
       { path: 'facturas', loadComponent: () => import('./pages/facturas/facturas').then(m => m.FacturasComponent) },
       { path: 'ventas', loadComponent: () => import('./pages/ventas/ventas').then(m => m.VentasComponent) },
     ]
