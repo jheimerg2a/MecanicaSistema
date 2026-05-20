@@ -174,7 +174,46 @@ const getEstadisticas = async (req, res) => {
   }
 };
 
+const eliminarOrden = async (req, res) => {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    // Eliminar en orden por las FK
+    await conn.query('DELETE FROM seguimiento     WHERE orden_id = ?', [req.params.id]);
+    await conn.query('DELETE FROM orden_servicios WHERE orden_id = ?', [req.params.id]);
+    await conn.query('DELETE FROM orden_repuestos WHERE orden_id = ?', [req.params.id]);
+    await conn.query('DELETE FROM facturas        WHERE orden_id = ?', [req.params.id]);
+    await conn.query('DELETE FROM ordenes_trabajo WHERE id = ?',       [req.params.id]);
+    await conn.commit();
+    res.json({ mensaje: 'Orden eliminada correctamente' });
+  } catch (err) {
+    await conn.rollback();
+    console.error(err);
+    res.status(500).json({ mensaje: 'Error al eliminar orden' });
+  } finally {
+    conn.release();
+  }
+};
+
+const updateOrden = async (req, res) => {
+  const { mecanico_id, descripcion_problema, fecha_estimada, km_actual, mano_obra, observaciones } = req.body;
+  try {
+    await pool.query(
+      `UPDATE ordenes_trabajo
+       SET mecanico_id=?, descripcion_problema=?, fecha_estimada=?,
+           km_actual=?, mano_obra=?, observaciones=?
+       WHERE id=?`,
+      [mecanico_id || null, descripcion_problema, fecha_estimada || null,
+       km_actual || null, mano_obra || 0, observaciones || '', req.params.id]
+    );
+    res.json({ mensaje: 'Orden actualizada' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ mensaje: 'Error al actualizar orden' });
+  }
+};
 module.exports = {
   getOrdenes, getOrdenById, createOrden, updateEstado, getEstadisticas,
-  agregarServicio, eliminarServicio, agregarRepuesto, eliminarRepuesto, updateManoObra
+  agregarServicio, eliminarServicio, agregarRepuesto, eliminarRepuesto,
+  updateManoObra, eliminarOrden, updateOrden
 };

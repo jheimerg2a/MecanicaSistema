@@ -21,6 +21,11 @@ app.use('/api/seguimiento', require('./routes/seguimiento.routes'));
 app.use('/api/servicios', require('./routes/servicios.routes'));
 app.use('/api/ventas', require('./routes/ventas.routes'));
 
+const path = require('path');
+
+// Servir imágenes estáticas
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Ruta de prueba
 app.get('/', (req, res) => {
   res.json({ mensaje: 'API Taller Mecánico funcionando ✅' });
