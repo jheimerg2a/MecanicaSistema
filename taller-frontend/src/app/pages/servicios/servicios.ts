@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ServiciosService } from '../../core/services/servicios.service';
+import { RolService } from '../../core/services/rol.service';
 
 @Component({
   selector: 'app-servicios',
@@ -28,7 +29,8 @@ export class ServiciosComponent implements OnInit {
 
   constructor(
     private serviciosService: ServiciosService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public rol: RolService
   ) {}
 
   ngOnInit() { this.cargar(); }

@@ -1,14 +1,17 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { RolService } from '../../core/services/rol.service';
+
 
 @Component({
   selector: 'app-repuestos',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './repuestos.html',
-  styleUrl: './repuestos.css'
+  styleUrl: './repuestos.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RepuestosComponent implements OnInit {
   repuestos: any[] = [];
@@ -45,7 +48,7 @@ export class RepuestosComponent implements OnInit {
   private url = 'http://localhost:3000/api/repuestos';
   urlBase     = 'http://localhost:3000';
 
-  constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef,public rol: RolService) {}
 
   ngOnInit() { this.cargar(); }
 

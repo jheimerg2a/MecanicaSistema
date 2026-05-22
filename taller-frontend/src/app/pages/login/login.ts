@@ -30,7 +30,12 @@ export class LoginComponent {
     this.auth.login(this.email, this.password).subscribe({
       next: (res) => {
         this.auth.guardarSesion(res.token, res.usuario);
-        this.router.navigate(['/dashboard/home']);
+        // Redirigir según rol
+        if (res.usuario.rol === 'admin') {
+          this.router.navigate(['/dashboard/home']);
+        } else {
+          this.router.navigate(['/dashboard/mecanico']);
+        }
       },
       error: () => {
         this.error    = 'Credenciales incorrectas';

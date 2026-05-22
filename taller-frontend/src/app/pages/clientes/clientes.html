@@ -5,7 +5,11 @@
       <h4 class="fw-bold mb-0"><i class="bi bi-people-fill text-warning me-2"></i>Clientes</h4>
       <small class="text-muted">{{ clientes.length }} registrados</small>
     </div>
-    <button class="btn btn-warning fw-semibold" (click)="nuevo()">
+
+    <!-- Botón nuevo cliente — solo admin y mecánico -->
+    <button class="btn btn-warning fw-semibold"
+            *ngIf="rol.puedeEditarCliente()"
+            (click)="nuevo()">
       <i class="bi bi-plus-lg me-1"></i>Nuevo cliente
     </button>
   </div>
@@ -38,6 +42,7 @@
               <div class="spinner-border text-warning"></div>
             </td>
           </tr>
+
           <tr *ngFor="let c of filtrados">
             <td class="text-muted small">{{ c.id }}</td>
             <td class="fw-semibold">{{ c.nombre }} {{ c.apellido }}</td>
@@ -45,14 +50,21 @@
             <td>{{ c.telefono || '—' }}</td>
             <td>{{ c.email || '—' }}</td>
             <td>{{ c.direccion || '—' }}</td>
+
             <td>
-              <button class="btn btn-sm btn-outline-secondary" (click)="editar(c)">
+              <!-- Botón editar — solo admin -->
+              <button *ngIf="rol.puedeEditarCliente()"
+                      class="btn btn-sm btn-outline-secondary"
+                      (click)="editar(c)">
                 <i class="bi bi-pencil"></i>
               </button>
             </td>
           </tr>
+
           <tr *ngIf="!cargando && filtrados.length === 0">
-            <td colspan="7" class="text-center text-muted py-4">No hay clientes registrados</td>
+            <td colspan="7" class="text-center text-muted py-4">
+              No hay clientes registrados
+            </td>
           </tr>
         </tbody>
       </table>
@@ -62,48 +74,68 @@
 
 <!-- Modal -->
 <div class="modal-backdrop-custom" *ngIf="mostrarModal" (click)="mostrarModal=false"></div>
+
 <div class="modal-custom" *ngIf="mostrarModal">
   <div class="modal-dialog-custom">
+
     <div class="modal-header">
       <h5 class="modal-title fw-bold">
         <i class="bi bi-person-plus me-2"></i>{{ modoEdicion ? 'Editar' : 'Nuevo' }} cliente
       </h5>
+
       <button class="btn-close" (click)="mostrarModal=false"></button>
     </div>
+
     <div class="modal-body">
       <div class="row g-3">
+
         <div class="col-6">
           <label class="form-label small fw-semibold">Nombre *</label>
           <input class="form-control" [(ngModel)]="clienteForm.nombre">
         </div>
+
         <div class="col-6">
           <label class="form-label small fw-semibold">Apellido *</label>
           <input class="form-control" [(ngModel)]="clienteForm.apellido">
         </div>
+
         <div class="col-6">
           <label class="form-label small fw-semibold">DNI</label>
           <input class="form-control" [(ngModel)]="clienteForm.dni">
         </div>
+
         <div class="col-6">
           <label class="form-label small fw-semibold">Teléfono</label>
           <input class="form-control" [(ngModel)]="clienteForm.telefono">
         </div>
+
         <div class="col-12">
           <label class="form-label small fw-semibold">Email</label>
           <input class="form-control" type="email" [(ngModel)]="clienteForm.email">
         </div>
+
         <div class="col-12">
           <label class="form-label small fw-semibold">Dirección</label>
           <input class="form-control" [(ngModel)]="clienteForm.direccion">
         </div>
+
       </div>
     </div>
+
     <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="mostrarModal=false">Cancelar</button>
-      <button class="btn btn-warning fw-semibold" (click)="guardar()" [disabled]="guardando">
+      <button class="btn btn-secondary" (click)="mostrarModal=false">
+        Cancelar
+      </button>
+
+      <button class="btn btn-warning fw-semibold"
+              (click)="guardar()"
+              [disabled]="guardando">
+
         <span *ngIf="guardando" class="spinner-border spinner-border-sm me-1"></span>
+
         {{ guardando ? 'Guardando...' : 'Guardar' }}
       </button>
     </div>
+
   </div>
 </div>

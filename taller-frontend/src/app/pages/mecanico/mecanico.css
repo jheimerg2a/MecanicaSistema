@@ -1,0 +1,113 @@
+.mecanico-wrapper { max-width: 900px; margin: 0 auto; }
+
+/* Pantalla inicial */
+.pantalla-inicio { padding: 2rem 0; }
+
+.opcion-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.opcion-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  border-color: #f0a500;
+}
+
+.opcion-icono { font-size: 3rem; }
+
+/* Indicador de pasos */
+.pasos-indicador {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.paso-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.paso-circulo {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #e9ecef;
+  color: #6c757d;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.85rem;
+  transition: all 0.3s;
+}
+
+.paso-item.activo .paso-circulo {
+  background: #f0a500;
+  color: #fff;
+}
+
+.paso-item.completado .paso-circulo {
+  background: #198754;
+  color: #fff;
+}
+
+.paso-label {
+  font-size: 0.72rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.paso-item.activo .paso-label { color: #f0a500; font-weight: 600; }
+.paso-item.completado .paso-label { color: #198754; }
+
+.paso-linea {
+  flex: 1;
+  height: 2px;
+  background: #e9ecef;
+  min-width: 60px;
+  margin-bottom: 20px;
+}
+
+/* Flujo card */
+.flujo-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+
+/* Secciones */
+.detalle-seccion {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+/* Sugerencias */
+.sugerencias-dropdown {
+  position: absolute;
+  top: 100%; left: 0; right: 0;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 1000;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.sugerencia-item {
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.1s;
+}
+
+.sugerencia-item:hover { background: #fff8e1; }
+.sugerencia-item:last-child { border-bottom: none; }

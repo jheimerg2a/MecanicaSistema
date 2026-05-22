@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClientesService } from '../../core/services/clientes.service';
+import { RolService } from '../../core/services/rol.service';
 
 @Component({
   selector: 'app-clientes',
@@ -22,7 +23,8 @@ export class ClientesComponent implements OnInit {
 
   constructor(
     private clientesService: ClientesService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public rol: RolService
   ) {}
 
   ngOnInit() { this.cargar(); }
@@ -31,9 +33,9 @@ export class ClientesComponent implements OnInit {
     this.cargando = true;
     this.clientesService.getAll().subscribe({
       next: (data) => {
-        this.clientes = data;
+        this.clientes  = data;
         this.filtrados = data;
-        this.cargando = false;
+        this.cargando  = false;
         this.cdr.detectChanges();
       },
       error: () => { this.cargando = false; this.cdr.detectChanges(); }
@@ -44,8 +46,7 @@ export class ClientesComponent implements OnInit {
     const q = this.busqueda.toLowerCase();
     this.filtrados = this.clientes.filter(c =>
       `${c.nombre} ${c.apellido}`.toLowerCase().includes(q) ||
-      c.dni?.includes(q) ||
-      c.telefono?.includes(q)
+      c.dni?.includes(q) || c.telefono?.includes(q)
     );
   }
 
@@ -56,6 +57,7 @@ export class ClientesComponent implements OnInit {
   }
 
   editar(c: any) {
+    if (!this.rol.puedeEditarCliente()) return;
     this.clienteForm  = { ...c };
     this.modoEdicion  = true;
     this.mostrarModal = true;
@@ -66,7 +68,6 @@ export class ClientesComponent implements OnInit {
     const op = this.modoEdicion
       ? this.clientesService.update(this.clienteForm.id, this.clienteForm)
       : this.clientesService.create(this.clienteForm);
-
     op.subscribe({
       next: () => {
         this.guardando    = false;

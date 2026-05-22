@@ -1,0 +1,311 @@
+<div class="mecanico-wrapper">
+
+  <!-- ══ PANTALLA INICIAL ══ -->
+  <div *ngIf="flujo === null" class="pantalla-inicio">
+    <div class="text-center mb-5">
+      <i class="bi bi-wrench-adjustable-circle-fill text-warning" style="font-size:4rem"></i>
+      <h3 class="fw-bold mt-3">Bienvenido, {{ usuario?.nombre }}</h3>
+      <p class="text-muted">¿Qué tipo de atención vas a registrar?</p>
+    </div>
+    <div class="row g-4 justify-content-center">
+      <div class="col-md-5">
+        <div class="opcion-card" (click)="iniciarFlujoNuevo()">
+          <i class="bi bi-person-plus-fill opcion-icono text-primary"></i>
+          <h5 class="fw-bold mt-3">Orden a cliente nuevo</h5>
+          <p class="text-muted small">Registra el cliente, su vehículo y crea la orden paso a paso</p>
+          <span class="btn btn-primary px-4 mt-2">Iniciar <i class="bi bi-arrow-right ms-1"></i></span>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="opcion-card" (click)="iniciarFlujoHabitual()">
+          <i class="bi bi-person-check-fill opcion-icono text-success"></i>
+          <h5 class="fw-bold mt-3">Orden a cliente habitual</h5>
+          <p class="text-muted small">El cliente ya está registrado, ve directo a crear la orden</p>
+          <span class="btn btn-success px-4 mt-2">Iniciar <i class="bi bi-arrow-right ms-1"></i></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FLUJO PASO A PASO ══ -->
+  <div *ngIf="flujo !== null">
+
+    <!-- Header del flujo -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h4 class="fw-bold mb-0">
+          <i class="bi bi-clipboard2-plus text-warning me-2"></i>
+          {{ flujo === 'nuevo' ? 'Cliente nuevo' : 'Cliente habitual' }}
+        </h4>
+        <small class="text-muted">
+          {{ paso === 1 ? 'Paso 1: Datos del cliente' :
+             paso === 2 ? 'Paso 2: Vehículo del cliente' :
+             paso === 3 ? 'Paso 3: Crear orden de trabajo' :
+             'Orden completada' }}
+        </small>
+      </div>
+      <button class="btn btn-outline-secondary btn-sm" (click)="resetear()">
+        <i class="bi bi-x-lg me-1"></i>Cancelar
+      </button>
+    </div>
+
+    <!-- Indicador de pasos (solo cliente nuevo) -->
+    <div *ngIf="flujo === 'nuevo'" class="pasos-indicador mb-4">
+      <div class="paso-item" [class.activo]="paso >= 1" [class.completado]="paso > 1">
+        <div class="paso-circulo">1</div>
+        <div class="paso-label">Cliente</div>
+      </div>
+      <div class="paso-linea"></div>
+      <div class="paso-item" [class.activo]="paso >= 2" [class.completado]="paso > 2">
+        <div class="paso-circulo">2</div>
+        <div class="paso-label">Vehículo</div>
+      </div>
+      <div class="paso-linea"></div>
+      <div class="paso-item" [class.activo]="paso >= 3" [class.completado]="paso > 3">
+        <div class="paso-circulo">3</div>
+        <div class="paso-label">Orden</div>
+      </div>
+      <div class="paso-linea"></div>
+      <div class="paso-item" [class.activo]="paso >= 4">
+        <div class="paso-circulo"><i class="bi bi-check-lg"></i></div>
+        <div class="paso-label">Listo</div>
+      </div>
+    </div>
+
+    <!-- ══ PASO 1: CLIENTE ══ -->
+    <div *ngIf="paso === 1" class="flujo-card">
+      <h6 class="fw-bold mb-3"><i class="bi bi-person-plus me-2 text-warning"></i>Datos del nuevo cliente</h6>
+      <div class="row g-3">
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Nombre *</label>
+          <input class="form-control" [(ngModel)]="clienteForm.nombre" placeholder="Nombre del cliente">
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Apellido *</label>
+          <input class="form-control" [(ngModel)]="clienteForm.apellido" placeholder="Apellido">
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">DNI</label>
+          <input class="form-control" [(ngModel)]="clienteForm.dni" placeholder="12345678">
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Teléfono</label>
+          <input class="form-control" [(ngModel)]="clienteForm.telefono" placeholder="987654321">
+        </div>
+        <div class="col-12">
+          <label class="form-label small fw-semibold">Dirección</label>
+          <input class="form-control" [(ngModel)]="clienteForm.direccion" placeholder="Dirección (opcional)">
+        </div>
+      </div>
+      <div class="d-flex justify-content-end mt-3">
+        <button class="btn btn-warning fw-semibold px-4" (click)="guardarCliente()" [disabled]="guardandoCliente">
+          <span *ngIf="guardandoCliente" class="spinner-border spinner-border-sm me-1"></span>
+          Guardar y continuar <i class="bi bi-arrow-right ms-1"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ PASO 2: VEHÍCULO ══ -->
+    <div *ngIf="paso === 2" class="flujo-card">
+      <div class="alert alert-success py-2 mb-3 small">
+        <i class="bi bi-check-circle me-1"></i>
+        Cliente <strong>{{ clienteCreado?.nombre }} {{ clienteCreado?.apellido }}</strong> creado. Ahora registra su vehículo.
+      </div>
+      <h6 class="fw-bold mb-3"><i class="bi bi-car-front me-2 text-warning"></i>Datos del vehículo</h6>
+      <div class="row g-3">
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Placa *</label>
+          <input class="form-control text-uppercase" [(ngModel)]="vehiculoForm.placa" placeholder="ABC-123">
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Tipo</label>
+          <select class="form-select" [(ngModel)]="vehiculoForm.tipo">
+            <option value="">— Selecciona —</option>
+            <option *ngFor="let t of tipos" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Marca *</label>
+          <select class="form-select" [(ngModel)]="vehiculoForm.marca">
+            <option value="">— Selecciona —</option>
+            <option *ngFor="let m of marcas" [value]="m">{{ m }}</option>
+          </select>
+        </div>
+        <div class="col-6">
+          <label class="form-label small fw-semibold">Modelo *</label>
+          <input class="form-control" [(ngModel)]="vehiculoForm.modelo" placeholder="Ej: Corolla, Tucson">
+        </div>
+        <div class="col-4">
+          <label class="form-label small fw-semibold">Año</label>
+          <input class="form-control" type="number" [(ngModel)]="vehiculoForm.anio" placeholder="2020">
+        </div>
+        <div class="col-4">
+          <label class="form-label small fw-semibold">Color</label>
+          <input class="form-control" [(ngModel)]="vehiculoForm.color" placeholder="Blanco">
+        </div>
+        <div class="col-4">
+          <label class="form-label small fw-semibold">Kilometraje</label>
+          <input class="form-control" type="number" [(ngModel)]="vehiculoForm.km_ingreso">
+        </div>
+      </div>
+      <div class="d-flex justify-content-end mt-3">
+        <button class="btn btn-warning fw-semibold px-4" (click)="guardarVehiculo()" [disabled]="guardandoVehiculo">
+          <span *ngIf="guardandoVehiculo" class="spinner-border spinner-border-sm me-1"></span>
+          Guardar y continuar <i class="bi bi-arrow-right ms-1"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ PASO 3: ORDEN ══ -->
+    <div *ngIf="paso === 3" class="flujo-card">
+
+      <!-- Info vehículo preseleccionado -->
+      <div *ngIf="vehiculoSeleccionado" class="alert alert-success py-2 mb-3 small">
+        <i class="bi bi-car-front me-1"></i>
+        Vehículo: <strong>{{ busquedaVehiculo }}</strong>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <h6 class="fw-bold mb-3"><i class="bi bi-clipboard2-plus me-2 text-warning"></i>Datos de la orden</h6>
+
+          <!-- Buscar vehículo (solo cliente habitual) -->
+          <div *ngIf="flujo === 'habitual'" class="mb-2">
+            <label class="form-label small fw-semibold">Vehículo *</label>
+            <div class="position-relative">
+              <input class="form-control" placeholder="Nombre del cliente o placa..."
+                     [(ngModel)]="busquedaVehiculo" (input)="buscarVehiculo()">
+              <div *ngIf="mostrarVehiculos" class="sugerencias-dropdown">
+                <div *ngFor="let v of vehiculosFiltrados" class="sugerencia-item" (click)="seleccionarVehiculo(v)">
+                  <div class="fw-semibold small">{{ v.cliente }}</div>
+                  <div class="text-muted" style="font-size:0.75rem">{{ v.marca }} {{ v.modelo }} — <span class="badge bg-dark">{{ v.placa }}</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">Kilometraje</label>
+              <input class="form-control" type="number" [(ngModel)]="ordenForm.km_actual">
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">Fecha estimada</label>
+              <input class="form-control" type="date" [(ngModel)]="ordenForm.fecha_estimada">
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">Mano de obra (S/)</label>
+              <input class="form-control" type="number" step="0.01" [(ngModel)]="ordenForm.mano_obra">
+            </div>
+          </div>
+
+          <div class="mt-2">
+            <label class="form-label small fw-semibold">Descripción del problema *</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="ordenForm.descripcion_problema"
+                      placeholder="Describe el problema reportado..."></textarea>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <h6 class="fw-bold mb-3"><i class="bi bi-tools me-2 text-warning"></i>Servicios y Repuestos</h6>
+
+          <!-- Servicios -->
+          <div class="detalle-seccion mb-3">
+            <div class="small fw-semibold mb-2">Servicios</div>
+            <div class="position-relative mb-2">
+              <input class="form-control form-control-sm" placeholder="Buscar servicio..."
+                     [(ngModel)]="busquedaServicio" (input)="buscarServicio()">
+              <div *ngIf="mostrarSugServicio" class="sugerencias-dropdown">
+                <div *ngFor="let s of serviciosFiltrados" class="sugerencia-item" (click)="seleccionarServicio(s)">
+                  <div class="fw-semibold small">{{ s.nombre }}</div>
+                  <div class="text-muted" style="font-size:0.75rem">S/ {{ s.precio_base | number:'1.2-2' }}</div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="servicioForm.servicio_id" class="d-flex gap-1 mb-2">
+              <input class="form-control form-control-sm" type="number" step="0.01"
+                     [(ngModel)]="servicioForm.precio" placeholder="Precio" style="max-width:90px">
+              <input class="form-control form-control-sm" [(ngModel)]="servicioForm.observacion" placeholder="Obs.">
+              <button class="btn btn-sm btn-success" (click)="agregarServicio()"><i class="bi bi-plus-lg"></i></button>
+            </div>
+            <div *ngFor="let s of serviciosOrden; let i=index"
+                 class="d-flex justify-content-between align-items-center py-1 border-bottom small">
+              <span>{{ s.nombre }}</span>
+              <div class="d-flex gap-1 align-items-center">
+                <span class="text-success fw-bold">S/ {{ s.precio | number:'1.2-2' }}</span>
+                <button class="btn btn-sm btn-outline-danger py-0 px-1" (click)="quitarServicio(i)"><i class="bi bi-x"></i></button>
+              </div>
+            </div>
+            <div *ngIf="!serviciosOrden.length" class="text-muted small text-center py-1">Sin servicios</div>
+          </div>
+
+          <!-- Repuestos -->
+          <div class="detalle-seccion mb-3">
+            <div class="small fw-semibold mb-2">Repuestos</div>
+            <div class="position-relative mb-2">
+              <input class="form-control form-control-sm" placeholder="Buscar repuesto..."
+                     [(ngModel)]="busquedaRepuesto" (input)="buscarRepuesto()">
+              <div *ngIf="mostrarSugRepuesto" class="sugerencias-dropdown">
+                <div *ngFor="let r of repuestosFiltrados" class="sugerencia-item" (click)="seleccionarRepuesto(r)">
+                  <div class="fw-semibold small">{{ r.nombre }}</div>
+                  <div class="d-flex justify-content-between" style="font-size:0.75rem">
+                    <span class="text-muted">Stock: {{ r.stock }}</span>
+                    <span class="text-success">S/ {{ r.precio_venta | number:'1.2-2' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="repuestoForm.repuesto_id" class="d-flex gap-1 mb-2">
+              <input class="form-control form-control-sm" type="number"
+                     [(ngModel)]="repuestoForm.cantidad" placeholder="Cant." style="max-width:70px">
+              <input class="form-control form-control-sm" type="number" step="0.01"
+                     [(ngModel)]="repuestoForm.precio_unitario" placeholder="Precio">
+              <button class="btn btn-sm btn-success" (click)="agregarRepuesto()"><i class="bi bi-plus-lg"></i></button>
+            </div>
+            <div *ngFor="let r of repuestosOrden; let i=index"
+                 class="d-flex justify-content-between align-items-center py-1 border-bottom small">
+              <span>{{ r.nombre }} x{{ r.cantidad }}</span>
+              <div class="d-flex gap-1 align-items-center">
+                <span class="text-success fw-bold">S/ {{ r.precio_unitario * r.cantidad | number:'1.2-2' }}</span>
+                <button class="btn btn-sm btn-outline-danger py-0 px-1" (click)="quitarRepuesto(i)"><i class="bi bi-x"></i></button>
+              </div>
+            </div>
+            <div *ngIf="!repuestosOrden.length" class="text-muted small text-center py-1">Sin repuestos</div>
+          </div>
+
+          <!-- Total -->
+          <div class="bg-warning-subtle rounded p-2 text-end">
+            <span class="small text-muted">Total estimado: </span>
+            <strong class="text-warning">S/ {{ totalEstimado | number:'1.2-2' }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end mt-3">
+        <button class="btn btn-warning fw-semibold px-4" (click)="guardarOrden()" [disabled]="guardandoOrden">
+          <span *ngIf="guardandoOrden" class="spinner-border spinner-border-sm me-1"></span>
+          <i *ngIf="!guardandoOrden" class="bi bi-check-lg me-1"></i>
+          {{ guardandoOrden ? 'Creando orden...' : 'Crear orden' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ PASO 4: ÉXITO ══ -->
+    <div *ngIf="paso === 4" class="flujo-card text-center py-5">
+      <i class="bi bi-check-circle-fill text-success" style="font-size:4rem"></i>
+      <h4 class="fw-bold mt-3 text-success">¡Orden creada exitosamente!</h4>
+      <p class="text-muted mb-1">Código de orden:</p>
+      <h3 class="fw-bold text-warning">{{ ordenCreada?.codigo }}</h3>
+      <div class="d-flex justify-content-center gap-3 mt-4">
+        <button class="btn btn-outline-secondary" (click)="resetear()">
+          <i class="bi bi-house me-1"></i>Volver al inicio
+        </button>
+        <button class="btn btn-warning fw-semibold" (click)="irAOrdenes()">
+          <i class="bi bi-clipboard2-check me-1"></i>Ver órdenes
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+

@@ -1,15 +1,17 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrdenesService } from '../../core/services/ordenes.service';
 import { HttpClient } from '@angular/common/http';
+import { RolService } from '../../core/services/rol.service';
 
 @Component({
   selector: 'app-ordenes',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './ordenes.html',
-  styleUrl: './ordenes.css'
+  styleUrl: './ordenes.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OrdenesComponent implements OnInit {
   ordenes:   any[] = [];
@@ -75,7 +77,8 @@ export class OrdenesComponent implements OnInit {
   constructor(
     private ordenesService: OrdenesService,
     private http: HttpClient,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public rol: RolService
   ) {}
 
   ngOnInit() {
@@ -282,27 +285,48 @@ export class OrdenesComponent implements OnInit {
     this.mostrarModalNueva      = true;
   }
 
-  async guardarOrden() {
+  guardarOrden() {
     if (!this.ordenForm.vehiculo_id || !this.ordenForm.descripcion_problema) {
       alert('Selecciona un vehículo y describe el problema');
       return;
     }
     this.guardando = true;
+    this.cdr.detectChanges();
+
     this.ordenesService.create(this.ordenForm).subscribe({
-      next: async (res) => {
+      next: (res) => {
         const ordenId = res.id;
-        // Agregar servicios
-        for (const s of this.serviciosNuevaOrden) {
-          await this.ordenesService.agregarServicio(ordenId, s).toPromise();
-        }
-        // Agregar repuestos
-        for (const r of this.repuestosNuevaOrden) {
-          await this.ordenesService.agregarRepuesto(ordenId, r).toPromise();
-        }
-        this.guardando         = false;
-        this.mostrarModalNueva = false;
-        this.cdr.detectChanges();
-        this.cargar();
+        const servicios = [...this.serviciosNuevaOrden];
+        const repuestos = [...this.repuestosNuevaOrden];
+
+        const agregarServicios = (index: number) => {
+          if (index >= servicios.length) {
+            agregarRepuestos(0);
+            return;
+          }
+          this.ordenesService.agregarServicio(ordenId, servicios[index]).subscribe({
+            next: () => agregarServicios(index + 1),
+            error: () => agregarServicios(index + 1)
+          });
+        };
+
+        const agregarRepuestos = (index: number) => {
+          if (index >= repuestos.length) {
+            this.guardando         = false;
+            this.mostrarModalNueva = false;
+            this.serviciosNuevaOrden = [];
+            this.repuestosNuevaOrden = [];
+            this.cdr.detectChanges();
+            this.cargar();
+            return;
+          }
+          this.ordenesService.agregarRepuesto(ordenId, repuestos[index]).subscribe({
+            next: () => agregarRepuestos(index + 1),
+            error: () => agregarRepuestos(index + 1)
+          });
+        };
+
+        agregarServicios(0);
       },
       error: (err) => {
         this.guardando = false;
@@ -311,7 +335,6 @@ export class OrdenesComponent implements OnInit {
       }
     });
   }
-
   // ── Ver detalle (solo lectura) ──
   verOrden(orden: any) {
     this.ordenesService.getById(orden.id).subscribe({

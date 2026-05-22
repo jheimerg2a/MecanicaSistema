@@ -124,20 +124,48 @@ const agregarRepuesto = async (req, res) => {
   const { repuesto_id, cantidad, precio_unitario } = req.body;
   if (!repuesto_id) return res.status(400).json({ mensaje: 'repuesto_id es requerido' });
   try {
+    // Verificar stock disponible
+    const [repuesto] = await pool.query('SELECT stock FROM repuestos WHERE id = ?', [repuesto_id]);
+    if (repuesto.length === 0) return res.status(404).json({ mensaje: 'Repuesto no encontrado' });
+    if (repuesto[0].stock < cantidad) {
+      return res.status(400).json({ mensaje: `Stock insuficiente. Disponible: ${repuesto[0].stock}` });
+    }
+
     await pool.query(
       'INSERT INTO orden_repuestos (orden_id, repuesto_id, cantidad, precio_unitario) VALUES (?,?,?,?)',
       [req.params.id, repuesto_id, cantidad || 1, precio_unitario]
     );
+
+    // Descontar stock
+    await pool.query(
+      'UPDATE repuestos SET stock = stock - ? WHERE id = ?',
+      [cantidad || 1, repuesto_id]
+    );
+
     res.status(201).json({ mensaje: 'Repuesto agregado' });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ mensaje: 'Error al agregar repuesto' });
   }
 };
 
 const eliminarRepuesto = async (req, res) => {
   try {
+    // Obtener cantidad antes de eliminar para reponer stock
+    const [detalle] = await pool.query(
+      'SELECT repuesto_id, cantidad FROM orden_repuestos WHERE id = ?', [req.params.orId]
+    );
+    if (detalle.length === 0) return res.status(404).json({ mensaje: 'Repuesto no encontrado en la orden' });
+
     await pool.query('DELETE FROM orden_repuestos WHERE id = ?', [req.params.orId]);
-    res.json({ mensaje: 'Repuesto eliminado' });
+
+    // Reponer stock
+    await pool.query(
+      'UPDATE repuestos SET stock = stock + ? WHERE id = ?',
+      [detalle[0].cantidad, detalle[0].repuesto_id]
+    );
+
+    res.json({ mensaje: 'Repuesto eliminado y stock repuesto' });
   } catch (err) {
     res.status(500).json({ mensaje: 'Error al eliminar repuesto' });
   }

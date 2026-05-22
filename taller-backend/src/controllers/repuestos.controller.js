@@ -53,15 +53,18 @@ const createRepuesto = async (req, res) => {
 };
 
 const updateRepuesto = async (req, res) => {
-  const { nombre, descripcion, categoria, stock, stock_minimo, precio_compra,
-          precio_venta, proveedor, unidad_medida, precio_mayor, cantidad_mayor,
+  const { nombre, descripcion, categoria, precio_compra, precio_venta,
+          proveedor, unidad_medida, precio_mayor, cantidad_mayor,
           codigo_barra, marca, moneda, marca_oem, proveedor_oem, codigo_oem,
           codigo_original, precio_dist1, precio_dist2, precio_dist3 } = req.body;
+
+  // Parsear números correctamente desde FormData (vienen como string)
+  const stock        = parseFloat(req.body.stock)        || 0;
+  const stock_minimo = parseFloat(req.body.stock_minimo) || 0;
+
   try {
     let imagen = req.body.imagen_actual || null;
-
     if (req.file) {
-      // Eliminar imagen anterior si existe
       if (req.body.imagen_actual) {
         const rutaAnterior = path.join(__dirname, '../uploads/repuestos',
           path.basename(req.body.imagen_actual));
@@ -76,10 +79,13 @@ const updateRepuesto = async (req, res) => {
         cantidad_mayor=?, codigo_barra=?, marca=?, moneda=?, marca_oem=?, proveedor_oem=?,
         codigo_oem=?, codigo_original=?, precio_dist1=?, precio_dist2=?, precio_dist3=?, imagen=?
        WHERE id=?`,
-      [nombre, descripcion, categoria, stock, stock_minimo, precio_compra, precio_venta,
-       proveedor, unidad_medida, precio_mayor||0, cantidad_mayor||0, codigo_barra, marca,
+      [nombre, descripcion, categoria, stock, stock_minimo,
+       parseFloat(precio_compra)||0, parseFloat(precio_venta)||0,
+       proveedor, unidad_medida, parseFloat(precio_mayor)||0,
+       parseInt(cantidad_mayor)||0, codigo_barra, marca,
        moneda||'PEN', marca_oem, proveedor_oem, codigo_oem, codigo_original,
-       precio_dist1||0, precio_dist2||0, precio_dist3||0, imagen, req.params.id]
+       parseFloat(precio_dist1)||0, parseFloat(precio_dist2)||0,
+       parseFloat(precio_dist3)||0, imagen, req.params.id]
     );
     res.json({ mensaje: 'Repuesto actualizado' });
   } catch (err) {

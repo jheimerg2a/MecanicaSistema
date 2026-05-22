@@ -65,10 +65,16 @@
                 <button class="btn btn-sm btn-outline-secondary" (click)="verOrden(o)" title="Ver detalle">
                   <i class="bi bi-eye"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-primary" (click)="editarOrden(o)" title="Editar orden">
+                <button *ngIf="rol.puedeEditarOrdenBasico()"
+                        class="btn btn-sm btn-outline-primary" (click)="editarOrden(o)" title="Editar orden">
                   <i class="bi bi-pencil"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" (click)="eliminarOrden(o)" title="Eliminar orden">
+                <button *ngIf="!rol.puedeEditarOrdenBasico()"
+                        class="btn btn-sm btn-outline-warning" (click)="editarOrden(o)" title="Gestionar orden">
+                  <i class="bi bi-tools"></i>
+                </button>
+                <button *ngIf="rol.puedeEliminarOrden()"
+                        class="btn btn-sm btn-outline-danger" (click)="eliminarOrden(o)" title="Eliminar orden">
                   <i class="bi bi-trash"></i>
                 </button>
               </div>

@@ -10,4 +10,5 @@ export class FacturasService {
   getByOrden(id: number) { return this.http.get<any>(`${this.url}/orden/${id}`); }
   create(data: any)      { return this.http.post<any>(this.url, data); }
   registrarPago(id: number, data: any) { return this.http.post(`${this.url}/${id}/pago`, data); }
+  buscarOrdenes(q: string) { return this.http.get<any[]>(`${this.url}/buscar?q=${q}`); }
 }
